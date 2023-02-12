@@ -11,13 +11,14 @@ Note: There are some things that are specific to the Northside Wizards. It is be
 - Configured to Australia mobile numbers only. (But this is planned to be configurable or global)
 
 ### Requirements before running
+- Node.JS
 - MongoDB
 - (Suggested) Nginx or Apache to proxy pass
 
 ### Setup & running
 1. Clone the repo and open the top folder (that contains the `/apps` & `/shared` folders) in the terminal
 2. Install the packages using `npm install`
-4. Rename `.env.template` to `.env` and open the file to configure how you need and add your own Twilio API keys for SMS.
+4. Navigate to the `/apps/server` directory, rename `.env.template` to `.env`, open the file to configure how you need and add your own Twilio API keys for SMS.
 5. Run `npm start` to start the application.
 
 ### Support
