@@ -1,0 +1,40 @@
+{
+  "name": "auctioneer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "client": "cd apps/client && npm run dev",
+    "server": "cd apps/server && npm start",
+    "server:wait": "wait-on http://localhost:4053",
+    "start": "concurrently --success first -k  -n \"client,server\" \"npm run server:wait && npm run client\" \"npm run server\""
+  },
+  "author": "Zachary",
+  "license": "MIT",
+  "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@mantine/carousel": "^5.9.4",
+    "@mantine/core": "^5.9.4",
+    "@mantine/hooks": "^5.9.4",
+    "@mantine/notifications": "^5.9.4",
+    "@types/express-fileupload": "^1.4.1",
+    "@types/express-session": "^1.17.5",
+    "cookie-session": "^2.0.0",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.7",
+    "dotenv": "^16.0.3",
+    "embla-carousel-react": "^7.0.5",
+    "express-fileupload": "^1.4.0",
+    "fs": "^0.0.1-security",
+    "mongoose": "^6.8.2",
+    "path": "^0.12.7",
+    "ts-node": "^10.9.1",
+    "twilio": "^3.84.0",
+    "uuid": "^9.0.0",
+    "wait-on": "^6.0.1"
+  }
+}
