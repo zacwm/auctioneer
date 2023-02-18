@@ -10,7 +10,6 @@ import {
 import AdminListings from './Listings';
 import AdminUsers from './Users';
 import AdminBids from './Bids';
-import AdminBulk from './Bulk';
 import AdminSettings from './Settings';
 
 import ItemListing from './ItemListing';
@@ -98,22 +97,14 @@ function DisplayAdmin() {
       <Tabs value={activeTab} onTabChange={setActiveTab}>
         <Tabs.List>
           <Tabs.Tab value="listings">Listings</Tabs.Tab>
-          <Tabs.Tab value="users">Users</Tabs.Tab>
           <Tabs.Tab value="bids">Bids</Tabs.Tab>
-          <Tabs.Tab value="bulk">Bulk Edit Listings</Tabs.Tab>
+          <Tabs.Tab value="users">Users</Tabs.Tab>
           <Tabs.Tab value="settings">Settings</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="listings">
           <AdminListings
             activeTab={activeTab == 'listings'}
-            addHistory={addHistory}
-          />
-        </Tabs.Panel>
-
-        <Tabs.Panel value="users">
-          <AdminUsers
-            activeTab={activeTab == 'users'}
             addHistory={addHistory}
           />
         </Tabs.Panel>
@@ -125,9 +116,9 @@ function DisplayAdmin() {
           />
         </Tabs.Panel>
 
-        <Tabs.Panel value="bulk">
-          <AdminBulk
-            activeTab={activeTab == 'bulk'}
+        <Tabs.Panel value="users">
+          <AdminUsers
+            activeTab={activeTab == 'users'}
             addHistory={addHistory}
           />
         </Tabs.Panel>
