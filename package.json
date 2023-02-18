@@ -1,19 +1,25 @@
 {
   "name": "auctioneer",
   "version": "1.0.0",
-  "description": "",
+  "description": "A easy and simple auction web app to help manage auctions!",
   "main": "index.js",
   "workspaces": [
     "apps/*",
     "shared/*"
   ],
+  "homepage": "https://github.com/zacimac/auctioneer#readme",
+  "bugs": "https://github.com/zacimac/auctioneer/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zacimac/auctioneer.git"
+  },
   "scripts": {
     "client": "cd apps/client && npm run dev",
     "server": "cd apps/server && npm start",
     "server:wait": "wait-on http://localhost:4053",
     "start": "concurrently --success first -k  -n \"client,server\" \"npm run server:wait && npm run client\" \"npm run server\""
   },
-  "author": "Zachary",
+  "author": "Zachary <me@zachary.lol> (https://zachary.lol)",
   "license": "MIT",
   "dependencies": {
     "@emotion/react": "^11.10.5",
