@@ -1,9 +1,9 @@
 const store = new Map<string, any>();
 
-export async function get(key: string): Promise<any> {
+export function get(key: string): any {
   return store.get(key);
 }
 
-export async function set(key: string, value: any): Promise<void> {
+export function set(key: string, value: any): any {
   store.set(key, value);
 }

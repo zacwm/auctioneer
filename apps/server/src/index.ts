@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import cookiesession from 'cookie-session';
 import cors from 'cors';
 
+import * as cacher from './cacher';
 import Notifications from './notifications';
 
 import loginsModel from './models/logins';
@@ -59,7 +60,7 @@ let lastListingItemsUpdate: any = null;
 const listingItems = async (callback?: any) => {
   lastListingItemsUpdate = new Date();
 
-  const listings = await listingsModel.find({ $or: [{ hidden: false }, { hidden: { $exists: false } }] });
+  const listings = await listingsModel.find({});
   const listingParsed = [];
 
   // Fetch highest bid for each listing and add it to the listing object
@@ -102,10 +103,14 @@ const listingItems = async (callback?: any) => {
     }
   });
 
+  cacher.set('listingItems', listingParsed);
+
+  const hiddenFilteredOut = listingParsed.filter((listing: any) => !listing.hidden);
+
   if (callback) {
-    callback(listingParsed);
+    callback(hiddenFilteredOut);
   } else {
-    io.emit('itemsUpdate', listingParsed);
+    io.emit('itemsUpdate', hiddenFilteredOut);
   }
 };
 
@@ -179,9 +184,12 @@ io.on('connection', (socket) => {
       }),
       notifications: notifications,
       bids: bids.map((bid: any) => {
+        const listing = cacher.get('listingItems')?.find((listing: any) => listing.listingId == bid.listingId);
+
         return {
           referenceId: bid.referenceId,
           listingId: bid.listingId,
+          listingName: listing?.name || 'Unknown',
           bidAmount: bid.bidAmount,
           timeBid: bid.timeBid,
         }

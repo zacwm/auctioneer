@@ -33,9 +33,9 @@ function DisplayBidHistory() {
                   {
                     (bids || []).map((bid: any) => (
                       <tr key={bid._id}>
-                        <td>{bid.listingId}</td>
-                        <td>${bid.bidAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-                        <td>{new Date(bid.timeBid * 1000).toLocaleString()}</td>
+                        <td>{bid?.listingName || bid.listingId}</td>
+                        <td>${(bid?.bidAmount || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
+                        <td>{new Date((bid?.timeBid || 0) * 1000).toLocaleString()}</td>
                       </tr>
                     ))
                   }
