@@ -467,6 +467,7 @@ router.post('/bulkedit', async (req: express.Request, res: express.Response) => 
   }
 
   const listingIds = req.body.listingIds;
+  const editActions = req.body.actions;
 
   // Check that all listingIds is a valid type and is just an array of strings
   if (!Array.isArray(listingIds) || listingIds.some((listingId) => typeof listingId != 'string')) {
@@ -481,58 +482,27 @@ router.post('/bulkedit', async (req: express.Request, res: express.Response) => 
     return;
   }
 
+  const parsedUpdateQuery = {};
 
-  for (let i = 0; i < listingIds.length; i++) {
-    const listing = await listingsModel.findOne({ listingId: listingIds[i] });
-    if (!listing) {
-      // Skip
-      continue;
+  for (let i = 0; i < editActions.length; i++) {
+    const action = editActions[i];
+
+    if (action.type == 'name') {
+      parsedUpdateQuery['name'] = action.value;
+    } else if (action.type == 'description') {
+      parsedUpdateQuery['description'] = action.value;
+    } else if (action.type == 'starting-price') {
+      parsedUpdateQuery['startingPrice'] = action.value;
+    } else if (action.type == 'hidden') {
+      parsedUpdateQuery['hidden'] = action.value;
     }
-
-    if (req.body.name) {
-      listing.name = req.body.name;
-    }
-
-    if (req.body.description !== undefined) {
-      listing.description = req.body.description;
-    }
-
-    if (req.body.startingPrice) {
-      listing.startingPrice = req.body.startingPrice;
-    }
-
-    if (req.body.reservePrice !== undefined) {
-      listing.reservePrice = req.body.reservePrice;
-    }
-
-    if (req.body.featureImageIndex !== undefined) {
-      listing.featureImageIndex = req.body.featureImageIndex.toString();
-    }
-
-    if (req.body.bidIncrementRequirement) {
-      listing.bidIncrementRequirement = req.body.bidIncrementRequirement;
-    }
-
-    if (req.body.finishUnix) {
-      // Check if finishUnix is in the future, if so set finished to false
-      if (req.body.finishUnix > Date.now() / 1000) {
-        listing.finished = false;
-      }
-      listing.finishUnix = req.body.finishUnix;
-    }
-
-    if (req.body.hidden !== undefined) {
-      // check if type is boolean
-      if (typeof req.body.hidden == 'boolean') {
-        listing.hidden = req.body.hidden;
-      }
-    }
-
-    await listing.save();
   }
+
+  await listingsModel.updateMany({ listingId: { $in: listingIds } }, parsedUpdateQuery);
 
   res.send({
     success: true,
+    updated: allListings.length,
   });
 });
 

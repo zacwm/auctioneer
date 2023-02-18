@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Grid,
   Text,
   Stack,
   Paper,
@@ -18,6 +17,7 @@ import {
 import { DatePicker, TimeInput } from "@mantine/dates";
 import axios from "axios";
 import { IconPlus, IconEdit } from "@tabler/icons";
+import BulkEditActionSelector from "../../components/BulkEditActionSelector";
 
 interface DisplayAdminListingsProps {
   activeTab: boolean;
@@ -41,6 +41,10 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
   const [createSubmitError, setCreateSubmitError] = React.useState<string | undefined>(undefined);
 
   const [editModalOpen, setEditModalOpen] = React.useState<boolean>(false);
+  const [editActions, setEditActions] = React.useState<any[]>([]);
+  const [editSubmitting, setEditSubmitting] = React.useState<boolean>(false);
+  const [editSubmitSuccess, setEditSubmitSuccess] = React.useState<boolean>(false);
+  const [editSubmitError, setEditSubmitError] = React.useState<string | undefined>(undefined);
 
   const unixToString = (unix: number) => {
     // Format to DD/MM/YYYY HH:MM AM/PM
@@ -105,6 +109,47 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
     });
   }
 
+  const createModalClose = () => {
+    if (createSubmitting) return;
+    setCreateModalOpen(false);
+  }
+
+  const submitEdit = () => {
+    if (editSubmitting) return;
+    setEditSubmitting(true);
+    setEditSubmitError(undefined);
+    axios.post("/api/admin/bulkedit", {
+      actions: editActions,
+      listingIds: selectedItems,
+    }).then((res) => {
+      if (res.data.success) {
+        setEditActions([]);
+        setSelectedItems([]);
+        setEditSubmitSuccess(true);
+      } else if (res.data.reason) {
+        setEditSubmitError(res.data.reason);
+      } else {
+        setEditSubmitError("There was an error editing the listings");
+      }
+    }).catch((err) => {
+      console.error(err);
+      setEditSubmitError("There was an error editing the listings");
+      setEditSubmitting(false);
+    }).finally(() => {
+      setTimeout(() => {
+        setEditModalOpen(false);
+        setEditSubmitSuccess(false);
+        setEditSubmitting(false);
+      }, 5000);
+    })
+  }
+
+  const editModalClose = () => {
+    if (editSubmitting) return;
+    setEditModalOpen(false);
+    setEditActions([]);
+  }
+
   React.useEffect(() => {
     // TODO: Replace with the context fetching.
     if (!activeTab) return;
@@ -131,7 +176,7 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
     <>
       <Modal
         opened={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        onClose={createModalClose}
         title={(<Text fz="lg">Create New Listing</Text>)}
       >
         <Stack>
@@ -209,110 +254,115 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
       </Modal>
       <Modal
         opened={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={editModalClose}
         title={(<Text fz="lg">Editing {selectedItems.length} listing{selectedItems.length !== 1 && 's'}</Text>)}
       >
-
+        <Stack>
+          <BulkEditActionSelector
+            value={editActions}
+            onChange={setEditActions}
+            disabled={editSubmitting}
+          />
+          <Stack
+            sx={{
+              marginTop: '1rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #aaa',
+              width: '100%',
+            }}
+          >
+            <Button
+              onClick={submitEdit}
+              disabled={editSubmitting || editActions.length === 0}
+              size="lg"
+            >
+              Submit Changes
+            </Button>
+            { editSubmitError ? <Text color="red">{editSubmitError}</Text> : null }
+            { editSubmitSuccess ? <Text color="green">Successfully edited {selectedItems.length} listings</Text> : null }
+          </Stack>
+        </Stack>
       </Modal>
-      <Grid mt="md">
-        {/* Small left nav (unless mobile to show at top) */}
-        {/*
-          <Grid.Col md={4} span={12}>
-            <Stack>
-              <Paper
-                shadow="lg"
-                p="md"
-              >
-                
-              </Paper>
-            </Stack>
-          </Grid.Col>
-        */}
-
-        {/* Listing Results */}
-        <Grid.Col md={12} span={12}>
-          <Stack>
+      <Stack>
+        <Paper
+          shadow="lg"
+          p="md"
+        >
+          <Group>
+            <Button
+              onClick={() => setCreateModalOpen(true)}
+              leftIcon={<IconPlus />}
+            >
+              Create New Listing
+            </Button>
+            <Button
+              disabled={(selectedItems || []).length === 0}
+              onClick={() => setEditModalOpen(true)}
+              leftIcon={<IconEdit />}
+            >
+              Make Changes To Selected {(selectedItems || []).length > 0 ? `(${selectedItems.length})` : ''}
+            </Button>
+          </Group>
+        </Paper>
+        {
+          loadingItems ? (
+            <Center>
+              <Loader />
+            </Center>
+          ) : (
             <Paper
               shadow="lg"
               p="md"
             >
-              <Group>
-                <Button
-                  onClick={() => setCreateModalOpen(true)}
-                  leftIcon={<IconPlus />}
-                >
-                  Create New Listing
-                </Button>
-                <Button
-                  disabled={(selectedItems || []).length === 0}
-                  onClick={() => setEditModalOpen(true)}
-                  leftIcon={<IconEdit />}
-                >
-                  Make Changes To Selected {(selectedItems || []).length > 0 ? `(${selectedItems.length})` : ''}
-                </Button>
-              </Group>
-            </Paper>
-            {
-              loadingItems ? (
-                <Center>
-                  <Loader />
-                </Center>
-              ) : (
-                <Paper
-                  shadow="lg"
-                  p="md"
-                >
-                  <Table>
-                    <thead>
-                      <tr>
-                        <th>
+              <Table>
+                <thead>
+                  <tr>
+                    <th>
+                      <Checkbox
+                        onChange={headerCheckboxClick}
+                        checked={selectedItems.length === items.length}
+                        indeterminate={selectedItems.length > 0 && selectedItems.length < items.length}
+                      />
+                    </th>
+                    <th>Listing Name</th>
+                    <th>Active</th>
+                    <th># of Bids</th>
+                    <th>Current Bid</th>
+                    <th>Finishes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    (items || []).map((listing) => (
+                      <tr key={listing.listingId}>
+                        <td>
                           <Checkbox
-                            onChange={headerCheckboxClick}
-                            checked={selectedItems.length === items.length}
-                            indeterminate={selectedItems.length > 0 && selectedItems.length < items.length}
+                            checked={selectedItems.includes(listing.listingId)}
+                            onChange={(e) => {
+                              if (e.currentTarget.checked) {
+                                setSelectedItems([...selectedItems, listing.listingId]);
+                              } else {
+                                setSelectedItems(selectedItems.filter((id) => id !== listing.listingId));
+                              }
+                            }}
                           />
-                        </th>
-                        <th>Listing Name</th>
-                        <th>Active</th>
-                        <th># of Bids</th>
-                        <th>Current Bid</th>
-                        <th>Finishes</th>
-                        <th></th>
+                        </td>
+                        <td>{listing.name}</td>
+                        <td>{!listing.finished ? <Badge color="green">Active</Badge> : <Badge color="red">Finished</Badge>} {listing.hidden ? <Badge color="gray">Hidden</Badge> : null}</td>
+                        <td>{listing.bidCount}</td>
+                        <td>${listing.highestBid.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')} {listing.startingPrice == listing.highestBid ? <Badge color="gray">Starting</Badge> : null}</td>
+                        <td>{unixToString(listing.finishUnix)}</td>
+                        <td><Button onClick={() => addHistory("listing", listing.listingId)} size="xs">View</Button></td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {
-                        (items || []).map((listing) => (
-                          <tr key={listing.listingId}>
-                            <td>
-                              <Checkbox
-                                checked={selectedItems.includes(listing.listingId)}
-                                onChange={(e) => {
-                                  if (e.currentTarget.checked) {
-                                    setSelectedItems([...selectedItems, listing.listingId]);
-                                  } else {
-                                    setSelectedItems(selectedItems.filter((id) => id !== listing.listingId));
-                                  }
-                                }}
-                              />
-                            </td>
-                            <td>{listing.name}</td>
-                            <td>{!listing.finished ? <Badge color="green">Active</Badge> : <Badge color="red">Finished</Badge>} {listing.hidden ? <Badge color="gray">Hidden</Badge> : null}</td>
-                            <td>{listing.bidCount}</td>
-                            <td>${listing.highestBid.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')} {listing.startingPrice == listing.highestBid ? <Badge color="gray">Starting</Badge> : null}</td>
-                            <td>{unixToString(listing.finishUnix)}</td>
-                            <td><Button onClick={() => addHistory("listing", listing.listingId)} size="xs">View</Button></td>
-                          </tr>
-                        ))
-                      }
-                    </tbody>
-                  </Table>
-                </Paper>
-              )
-            }
-          </Stack>
-        </Grid.Col>
-      </Grid>
+                    ))
+                  }
+                </tbody>
+              </Table>
+            </Paper>
+          )
+        }
+      </Stack>
     </>
   )
 }
