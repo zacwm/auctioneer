@@ -93,7 +93,7 @@ function DisplayAdminBids({activeTab, addHistory}: DisplayAdminBidsProps) {
                         <td>{bid.listing?.name || "Unknown or Deleted"}</td>
                         <td>${bid.bidAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
                         <td>{unixToString(bid.timeBid)}</td>
-                        <td><Button onClick={() => addHistory("bid", bid.referenceId)}>View</Button></td>
+                        <td><Button size="xs" onClick={() => addHistory("bid", bid.referenceId)}>View</Button></td>
                       </tr>
                     ))
                   }

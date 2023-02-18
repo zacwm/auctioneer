@@ -74,7 +74,7 @@ function DisplayAdminUser({ activeTab, addHistory }: DisplayAdminUsersProps) {
                             <td>{user.firstName} {user.lastName}</td>
                             <td>{user.bids}</td>
                             <td><Badge color={user.status === "Banned" ? "Banned" : user.status === "Admin" ? "grape" : user.status === "Registered" ? "lime" : "gray"}>{user.status}</Badge></td>
-                            <td><Button onClick={() => addHistory("user", user.userId)}>View</Button></td>
+                            <td><Button size="xs" onClick={() => addHistory("user", user.userId)}>View</Button></td>
                           </tr>
                         ))
                       }
