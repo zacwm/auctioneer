@@ -12,6 +12,7 @@ import {
   NumberInput,
   Switch,
 } from '@mantine/core';
+import { DatePicker, TimeInput } from '@mantine/dates';
 
 interface BulkEditAction {
   type: string;
@@ -34,12 +35,17 @@ export default function BulkEditActionSelector({
     { label: 'Change Description', value: 'description', type: 'textarea' },
     { label: 'Change Starting Price', value: 'starting-price', type: 'price' },
     { label: 'Change Visibility', value: 'hidden', type: 'boolean' },
-  ];
+    { label: 'Change Finish Date & Time', value: 'finish-time', type: 'datetime' },
+  ]; 
   const remainingOptions = options.filter((option) => !value.some((v) => v.type === option.value));
 
   const [selectedOption, setSelectedOption] = React.useState<string | null>(null);
   const [selectedOptionType, setSelectedOptionType] = React.useState<string | null>(null);
   const [selectedOptionInput, setSelectedOptionInput] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    console.dir(selectedOptionInput);
+  }, [selectedOptionInput]);
   
   React.useEffect(() => {
     if (selectedOption) {
@@ -91,6 +97,8 @@ export default function BulkEditActionSelector({
                       parseValue = `$ ${action.value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                     } else if (option.type == 'boolean') {
                       parseValue = action.value ? 'On' : 'Off';
+                    } else if (option.type == 'datetime') {
+                      parseValue = new Date(action.value).toLocaleString();
                     }
 
                     return (
@@ -183,6 +191,21 @@ export default function BulkEditActionSelector({
                   onChange={(event) => setSelectedOptionInput(event.currentTarget.checked)}
                   disabled={disabled}
                 />
+              ) : selectedOptionType == 'datetime' ? (
+                <Group grow>
+                  <DatePicker
+                    label="Change finish date to..."
+                    value={selectedOptionInput}
+                    onChange={(value) => setSelectedOptionInput(value)}
+                    minDate={new Date()}
+                  />
+                  <TimeInput
+                    label="Change finish time to..."
+                    value={selectedOptionInput}
+                    onChange={(value) => setSelectedOptionInput(value)}
+                    format="12"
+                  />
+                </Group>
               ) : null
             }
             {

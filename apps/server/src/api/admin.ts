@@ -495,6 +495,16 @@ router.post('/bulkedit', async (req: express.Request, res: express.Response) => 
       parsedUpdateQuery['startingPrice'] = action.value;
     } else if (action.type == 'hidden') {
       parsedUpdateQuery['hidden'] = action.value;
+    } else if (action.type == 'finish-time') {
+      const finishTime = new Date(action.value);
+      const finishUnix = finishTime.getTime() / 1000;
+      parsedUpdateQuery['finishUnix'] = finishUnix;
+      // Check if finishUnix is in the future, if so set finished to false
+      if (finishUnix > Date.now() / 1000) {
+        parsedUpdateQuery['finished'] = false;
+        parsedUpdateQuery['winningBid'] = undefined;
+        parsedUpdateQuery['notifiedWinningBidder'] = false;
+      }
     }
   }
 

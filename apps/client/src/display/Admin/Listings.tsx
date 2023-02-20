@@ -13,10 +13,11 @@ import {
   Group,
   Checkbox,
   Modal,
+  ActionIcon,
 } from "@mantine/core";
 import { DatePicker, TimeInput } from "@mantine/dates";
 import axios from "axios";
-import { IconPlus, IconEdit } from "@tabler/icons";
+import { IconPlus, IconEdit, IconRefresh } from "@tabler/icons";
 import BulkEditActionSelector from "../../components/BulkEditActionSelector";
 
 interface DisplayAdminListingsProps {
@@ -45,6 +46,27 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
   const [editSubmitting, setEditSubmitting] = React.useState<boolean>(false);
   const [editSubmitSuccess, setEditSubmitSuccess] = React.useState<boolean>(false);
   const [editSubmitError, setEditSubmitError] = React.useState<string | undefined>(undefined);
+
+  const fetchItems = async () => {
+    if (loadingItems) return;
+    setItems([]);
+    setLoadingItems(true);
+    setLoadError(null);
+    axios.get("/api/admin/listings")
+      .then((res) => {
+        if (res.data.success) {
+          setItems(res.data.listings);
+        } else {
+          setLoadError(res.data.message);
+        }
+      })
+      .catch(() => {
+        setLoadError("Failed to load listings");
+      })
+      .finally(() => {
+        setLoadingItems(false);
+      });
+  }
 
   const unixToString = (unix: number) => {
     // Format to DD/MM/YYYY HH:MM AM/PM
@@ -136,6 +158,7 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
       setEditSubmitError("There was an error editing the listings");
       setEditSubmitting(false);
     }).finally(() => {
+      fetchItems();
       setTimeout(() => {
         setEditModalOpen(false);
         setEditSubmitSuccess(false);
@@ -151,25 +174,9 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
   }
 
   React.useEffect(() => {
-    // TODO: Replace with the context fetching.
     if (!activeTab) return;
     // Fetch listings
-    setItems([]);
-    setLoadingItems(true);
-    setLoadError(null);
-    axios.get("/api/admin/listings")
-      .then((res) => {
-        if (res.data.success) {
-          setItems(res.data.listings);
-        } else {
-          setLoadError(res.data.message);
-        }
-        setLoadingItems(false);
-      })
-      .catch(() => {
-        setLoadError("Failed to load listings");
-        setLoadingItems(false);
-      });
+    fetchItems();
   }, [activeTab]);
 
   return (
@@ -288,32 +295,42 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
           shadow="lg"
           p="md"
         >
-          <Group>
-            <Button
-              onClick={() => setCreateModalOpen(true)}
-              leftIcon={<IconPlus />}
-            >
-              Create New Listing
-            </Button>
-            <Button
-              disabled={(selectedItems || []).length === 0}
-              onClick={() => setEditModalOpen(true)}
-              leftIcon={<IconEdit />}
-            >
-              Make Changes To Selected {(selectedItems || []).length > 0 ? `(${selectedItems.length})` : ''}
-            </Button>
+          <Group grow>
+            <Group>
+              <Button
+                onClick={() => setCreateModalOpen(true)}
+                leftIcon={<IconPlus />}
+              >
+                Create New Listing
+              </Button>
+              <Button
+                disabled={(selectedItems || []).length === 0}
+                onClick={() => setEditModalOpen(true)}
+                leftIcon={<IconEdit />}
+              >
+                Make Changes To Selected {(selectedItems || []).length > 0 ? `(${selectedItems.length})` : ''}
+              </Button>
+            </Group>
+            <Group position="right">
+              <ActionIcon
+                onClick={fetchItems}
+                className={loadingItems ? 'Rotation' : ''}
+              >
+                <IconRefresh />
+              </ActionIcon>
+            </Group>
           </Group>
         </Paper>
-        {
-          loadingItems ? (
-            <Center>
-              <Loader />
-            </Center>
-          ) : (
-            <Paper
-              shadow="lg"
-              p="md"
-            >
+        <Paper
+          shadow="lg"
+          p="md"
+        >
+          {
+            loadingItems ? (
+              <Center>
+                <Loader />
+              </Center>
+            ) : (
               <Table>
                 <thead>
                   <tr>
@@ -359,9 +376,9 @@ function DisplayAdminListings({ activeTab, addHistory }: DisplayAdminListingsPro
                   }
                 </tbody>
               </Table>
-            </Paper>
-          )
-        }
+            )
+          }
+        </Paper>
       </Stack>
     </>
   )
